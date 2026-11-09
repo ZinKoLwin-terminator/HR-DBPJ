@@ -1,5 +1,5 @@
 -- Read-only reporting (security H1). SELECT only; no write, DDL or EXECUTE permission is granted.
--- Not granted: sec (accounts and permissions) and app (activity, notifications, imports).
+-- Not granted: sec (accounts and permissions), app (activity, notifications, imports) and auth (credentials).
 
 GRANT SELECT ON SCHEMA::[org] TO [hrms_report];
 GO
@@ -28,4 +28,8 @@ GO
 
 -- Bank details stay out of reporting even if a broader grant is added later.
 DENY SELECT ON OBJECT::[hr].[EmployeeBankAccount] TO [hrms_report];
+GO
+
+-- Credentials (password hashes, security stamps, reset and authenticator tokens) are never reported on.
+DENY SELECT ON SCHEMA::[auth] TO [hrms_report];
 GO

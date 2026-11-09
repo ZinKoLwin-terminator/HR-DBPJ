@@ -15,14 +15,17 @@ CREATE TABLE [sec].[AppUser]
     [ModifiedAtUtc]    datetime2(3)   NOT NULL CONSTRAINT [DF_AppUser_ModifiedAtUtc] DEFAULT (SYSUTCDATETIME()),
     [ModifiedByUserId] int            NULL,
     [RowVersion]       rowversion     NOT NULL,
-    -- Stable identity key from ASP.NET Core Identity (the identity user's Id). NULL until the account
-    -- is linked; the email is not used as the identity key because it can change.
-    [ExternalSubject]  nvarchar(200)  NULL,
+    -- Stable identity key from ASP.NET Core Identity (auth.User.Id). NULL until the account is linked;
+    -- the email is not used as the identity key because it can change. Same type as auth.User.Id (FK).
+    [ExternalSubject]  nvarchar(450)  NULL,
     CONSTRAINT [PK_AppUser] PRIMARY KEY CLUSTERED ([Id]),
     -- One account per email address (case-insensitive under the database collation).
     CONSTRAINT [UQ_AppUser_Email] UNIQUE ([Email]),
     CONSTRAINT [FK_AppUser_Employee] FOREIGN KEY ([EmployeeId]) REFERENCES [hr].[Employee] ([Id]),
     CONSTRAINT [FK_AppUser_Role] FOREIGN KEY ([RoleId]) REFERENCES [sec].[Role] ([Id]),
+    -- Unlinked accounts (NULL) are not checked. No cascade: an identity user that is still linked to an
+    -- application account cannot be deleted; unlink it first so the account and its history remain.
+    CONSTRAINT [FK_AppUser_AuthUser_ExternalSubject] FOREIGN KEY ([ExternalSubject]) REFERENCES [auth].[User] ([Id]),
     CONSTRAINT [CK_AppUser_Status] CHECK ([Status] IN ('Active', 'Inactive', 'Locked'))
 );
 GO

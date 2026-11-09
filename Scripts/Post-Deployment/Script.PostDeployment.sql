@@ -24,11 +24,14 @@ WHEN NOT MATCHED BY TARGET THEN
     INSERT ([ModuleKey], [Label], [SortOrder]) VALUES (s.[ModuleKey], s.[Label], s.[SortOrder]);
 
 -- ---- Actions per module (SortOrder follows PERMISSION_ACTIONS) ------------------------------------
+-- organization and employees must match PermissionModule.All in the API (Authorization\PermissionModule.cs);
+-- the personal-data actions follow the API's Permission enum order (6 to 9).
 MERGE [sec].[PermissionModuleAction] WITH (HOLDLOCK) AS t
 USING (VALUES
     ('dashboard',    'View',    1),
     ('organization', 'View',    1), ('organization', 'Create', 2), ('organization', 'Edit', 3), ('organization', 'Delete', 4),
     ('employees',    'View',    1), ('employees',    'Create', 2), ('employees',    'Edit', 3), ('employees',    'Delete', 4),
+    ('employees',    'ViewSensitive', 6), ('employees', 'EditSensitive', 7), ('employees', 'ViewBank', 8), ('employees', 'EditBank', 9),
     ('attendance',   'View',    1), ('attendance',   'Create', 2), ('attendance',   'Edit', 3), ('attendance',   'Approve', 5),
     ('leave',        'View',    1), ('leave',        'Create', 2), ('leave',        'Edit', 3), ('leave',        'Delete', 4), ('leave', 'Approve', 5),
     ('payroll',      'View',    1), ('payroll',      'Create', 2), ('payroll',      'Edit', 3), ('payroll',      'Approve', 5),
@@ -83,8 +86,8 @@ BEGIN
         (N'HR Officer',         'leave',        'View,Create,Edit,Approve'),
         (N'HR Officer',         'payroll',      'View'),
         (N'HR Officer',         'recruitment',  'View,Create,Edit'),
+        -- No employees grant until manager scope (own team only) exists in the API.
         (N'Department Manager', 'dashboard',    'View'),
-        (N'Department Manager', 'employees',    'View'),
         (N'Department Manager', 'organization', 'View'),
         (N'Department Manager', 'recruitment',  'View'),
         (N'Department Manager', 'attendance',   'View,Approve'),

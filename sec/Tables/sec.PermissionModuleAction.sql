@@ -6,5 +6,7 @@ CREATE TABLE [sec].[PermissionModuleAction]
     [SortOrder] smallint    NOT NULL,
     CONSTRAINT [PK_PermissionModuleAction] PRIMARY KEY CLUSTERED ([ModuleKey], [Action]),
     CONSTRAINT [FK_PermissionModuleAction_PermissionModule] FOREIGN KEY ([ModuleKey]) REFERENCES [sec].[PermissionModule] ([ModuleKey]),
-    CONSTRAINT [CK_PermissionModuleAction_Action] CHECK ([Action] IN ('View', 'Create', 'Edit', 'Delete', 'Approve'))
+    -- Permission enum in the API (Authorization\PermissionModule.cs) plus Approve for the workflow modules.
+    CONSTRAINT [CK_PermissionModuleAction_Action] CHECK ([Action] IN ('View', 'Create', 'Edit', 'Delete', 'Approve',
+                                                                     'ViewSensitive', 'EditSensitive', 'ViewBank', 'EditBank'))
 );
