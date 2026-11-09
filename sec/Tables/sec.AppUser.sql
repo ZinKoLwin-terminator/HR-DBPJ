@@ -15,7 +15,12 @@ CREATE TABLE [sec].[AppUser]
     [ModifiedAtUtc]    datetime2(3)   NOT NULL CONSTRAINT [DF_AppUser_ModifiedAtUtc] DEFAULT (SYSUTCDATETIME()),
     [ModifiedByUserId] int            NULL,
     [RowVersion]       rowversion     NOT NULL,
+    -- Stable identity key from ASP.NET Core Identity (the identity user's Id). NULL until the account
+    -- is linked; the email is not used as the identity key because it can change.
+    [ExternalSubject]  nvarchar(200)  NULL,
     CONSTRAINT [PK_AppUser] PRIMARY KEY CLUSTERED ([Id]),
+    -- One account per email address (case-insensitive under the database collation).
+    CONSTRAINT [UQ_AppUser_Email] UNIQUE ([Email]),
     CONSTRAINT [FK_AppUser_Employee] FOREIGN KEY ([EmployeeId]) REFERENCES [hr].[Employee] ([Id]),
     CONSTRAINT [FK_AppUser_Role] FOREIGN KEY ([RoleId]) REFERENCES [sec].[Role] ([Id]),
     CONSTRAINT [CK_AppUser_Status] CHECK ([Status] IN ('Active', 'Inactive', 'Locked'))
@@ -26,6 +31,12 @@ GO
 CREATE UNIQUE NONCLUSTERED INDEX [UQ_AppUser_EmployeeId]
     ON [sec].[AppUser] ([EmployeeId])
     WHERE [EmployeeId] IS NOT NULL;
+GO
+
+-- Sign-in lookup; each identity maps to at most one application account. Unlinked accounts are exempt.
+CREATE UNIQUE NONCLUSTERED INDEX [UQ_AppUser_ExternalSubject]
+    ON [sec].[AppUser] ([ExternalSubject])
+    WHERE [ExternalSubject] IS NOT NULL;
 GO
 
 CREATE NONCLUSTERED INDEX [IX_AppUser_RoleId] ON [sec].[AppUser] ([RoleId]) INCLUDE ([Status]);

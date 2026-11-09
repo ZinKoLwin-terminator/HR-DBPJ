@@ -1,5 +1,6 @@
--- One payroll period (a calendar month): Draft -> Pending Approval -> Approved -> Paid. Paid is final
--- (pay.TR_PayrollRun_PaidIsFinal). SAMPLE figures only.
+-- One payroll period (a calendar month): Draft -> Pending Approval -> Approved -> Paid. Approved is
+-- locked except for mark paid / return to draft, and Paid is final (pay.TR_PayrollRun_PaidIsFinal).
+-- SAMPLE figures only.
 CREATE TABLE [pay].[PayrollRun]
 (
     [Id]               int            IDENTITY (1, 1) NOT NULL,
@@ -28,6 +29,10 @@ CREATE TABLE [pay].[PayrollRun]
     [RowVersion]       rowversion     NOT NULL,
     [ValidFromUtc]     datetime2(7)   GENERATED ALWAYS AS ROW START HIDDEN NOT NULL,
     [ValidToUtc]       datetime2(7)   GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
+    -- User who processed the run, with a display-name snapshot (like ApprovedByName). Appended after
+    -- the existing columns so publishing adds them with ALTER TABLE instead of rebuilding the table.
+    [ProcessedByUserId] int            NULL,
+    [ProcessedByName]   nvarchar(130)  NULL,
     PERIOD FOR SYSTEM_TIME ([ValidFromUtc], [ValidToUtc]),
     CONSTRAINT [PK_PayrollRun] PRIMARY KEY CLUSTERED ([Id]),
     -- One period per month.
@@ -38,11 +43,21 @@ CREATE TABLE [pay].[PayrollRun]
     CONSTRAINT [CK_PayrollRun_PayDate] CHECK ([PayDate] >= [StartDate]),
     CONSTRAINT [CK_PayrollRun_Status] CHECK ([Status] IN ('Draft', 'Pending Approval', 'Approved', 'Paid')),
     CONSTRAINT [CK_PayrollRun_Totals] CHECK ([EmployeeCount] >= 0 AND [TotalBasic] >= 0 AND [TotalDeductions] >= 0 AND [TotalGross] = [TotalBasic] + [TotalAllowances] AND [TotalNet] = [TotalGross] - [TotalDeductions]),
-    -- Each status carries exactly the milestone dates reached so far.
+    -- Each status carries exactly the milestones reached so far: date, user and name of who did it.
     CONSTRAINT [CK_PayrollRun_Lifecycle] CHECK (
-        ([Status] = 'Draft'            AND [ProcessedOn] IS NULL     AND [ApprovedOn] IS NULL     AND [PaidOn] IS NULL     AND [EmployeeCount] = 0)
-     OR ([Status] = 'Pending Approval' AND [ProcessedOn] IS NOT NULL AND [ApprovedOn] IS NULL     AND [PaidOn] IS NULL)
-     OR ([Status] = 'Approved'         AND [ProcessedOn] IS NOT NULL AND [ApprovedOn] IS NOT NULL AND [PaidOn] IS NULL     AND [ApprovedByName] IS NOT NULL)
-     OR ([Status] = 'Paid'             AND [ProcessedOn] IS NOT NULL AND [ApprovedOn] IS NOT NULL AND [PaidOn] IS NOT NULL AND [ApprovedByName] IS NOT NULL))
+        ([Status] = 'Draft'            AND [ProcessedOn] IS NULL     AND [ProcessedByUserId] IS NULL     AND [ProcessedByName] IS NULL
+                                       AND [ApprovedOn] IS NULL      AND [ApprovedByUserId] IS NULL      AND [ApprovedByName] IS NULL
+                                       AND [PaidOn] IS NULL          AND [EmployeeCount] = 0)
+     OR ([Status] = 'Pending Approval' AND [ProcessedOn] IS NOT NULL AND [ProcessedByUserId] IS NOT NULL AND [ProcessedByName] IS NOT NULL
+                                       AND [ApprovedOn] IS NULL      AND [ApprovedByUserId] IS NULL      AND [ApprovedByName] IS NULL
+                                       AND [PaidOn] IS NULL)
+     OR ([Status] = 'Approved'         AND [ProcessedOn] IS NOT NULL AND [ProcessedByUserId] IS NOT NULL AND [ProcessedByName] IS NOT NULL
+                                       AND [ApprovedOn] IS NOT NULL  AND [ApprovedByUserId] IS NOT NULL  AND [ApprovedByName] IS NOT NULL
+                                       AND [PaidOn] IS NULL)
+     OR ([Status] = 'Paid'             AND [ProcessedOn] IS NOT NULL AND [ProcessedByUserId] IS NOT NULL AND [ProcessedByName] IS NOT NULL
+                                       AND [ApprovedOn] IS NOT NULL  AND [ApprovedByUserId] IS NOT NULL  AND [ApprovedByName] IS NOT NULL
+                                       AND [PaidOn] IS NOT NULL)),
+    -- Separation of duties: the user who processed a run cannot approve it.
+    CONSTRAINT [CK_PayrollRun_ApproverNotProcessor] CHECK ([ApprovedByUserId] <> [ProcessedByUserId])
 )
 WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [pay].[PayrollRunHistory], DATA_CONSISTENCY_CHECK = ON));

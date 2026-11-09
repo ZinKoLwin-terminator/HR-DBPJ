@@ -25,6 +25,10 @@ CREATE TABLE [lve].[LeaveApplication]
     [ModifiedAtUtc]      datetime2(3)   NOT NULL CONSTRAINT [DF_LeaveApplication_ModifiedAtUtc] DEFAULT (SYSUTCDATETIME()),
     [ModifiedByUserId]   int            NULL,
     [RowVersion]         rowversion     NOT NULL,
+    -- System-versioned so every decision (approve, reject, cancel) and who made it is kept.
+    [ValidFromUtc]       datetime2(7)   GENERATED ALWAYS AS ROW START HIDDEN NOT NULL,
+    [ValidToUtc]         datetime2(7)   GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
+    PERIOD FOR SYSTEM_TIME ([ValidFromUtc], [ValidToUtc]),
     CONSTRAINT [PK_LeaveApplication] PRIMARY KEY CLUSTERED ([Id]),
     CONSTRAINT [UQ_LeaveApplication_ApplicationNo] UNIQUE ([ApplicationNo]),
     CONSTRAINT [FK_LeaveApplication_Employee] FOREIGN KEY ([EmployeeId]) REFERENCES [hr].[Employee] ([Id]),
@@ -39,8 +43,10 @@ CREATE TABLE [lve].[LeaveApplication]
     CONSTRAINT [CK_LeaveApplication_Actioned] CHECK (([Status] IN ('Draft', 'Submitted') AND [ActionedOn] IS NULL) OR ([Status] IN ('Approved', 'Rejected', 'Cancelled') AND [ActionedOn] IS NOT NULL)),
     CONSTRAINT [CK_LeaveApplication_RejectionReason] CHECK ([Status] <> 'Rejected' OR LEN(LTRIM([ApproverRemarks])) > 0),
     -- "You cannot decide your own leave request."
+    -- A NULL approver (built-in administrator) bypasses this; the API must also block deciding your own leave via the user -> employee link.
     CONSTRAINT [CK_LeaveApplication_NotOwnApprover] CHECK ([ApproverEmployeeId] <> [EmployeeId])
-);
+)
+WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [lve].[LeaveApplicationHistory], DATA_CONSISTENCY_CHECK = ON));
 GO
 
 -- Balances, overlap checks and payroll read an employee's leave by date.
