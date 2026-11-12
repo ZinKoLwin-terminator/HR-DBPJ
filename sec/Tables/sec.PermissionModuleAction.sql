@@ -8,5 +8,6 @@ CREATE TABLE [sec].[PermissionModuleAction]
     CONSTRAINT [FK_PermissionModuleAction_PermissionModule] FOREIGN KEY ([ModuleKey]) REFERENCES [sec].[PermissionModule] ([ModuleKey]),
     -- Permission enum in the API (Authorization\PermissionModule.cs) plus Approve for the workflow modules.
     CONSTRAINT [CK_PermissionModuleAction_Action] CHECK ([Action] IN ('View', 'Create', 'Edit', 'Delete', 'Approve',
-                                                                     'ViewSensitive', 'EditSensitive', 'ViewBank', 'EditBank'))
+                                                                     'ViewSensitive', 'EditSensitive', 'ViewBank', 'EditBank',
+                                                                     'Import', 'Export'))
 );

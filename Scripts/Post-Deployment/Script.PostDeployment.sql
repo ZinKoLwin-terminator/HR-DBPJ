@@ -15,7 +15,9 @@ USING (VALUES
     ('leave',        N'Leave',        5),
     ('payroll',      N'Payroll',      6),
     ('recruitment',  N'Recruitment',  7),
-    ('settings',     N'Settings',     8)
+    ('settings',     N'Settings',     8),
+    ('activity',     N'Activity',     9),
+    ('excel',        N'Excel',        10)
 ) AS s ([ModuleKey], [Label], [SortOrder])
     ON t.[ModuleKey] = s.[ModuleKey]
 WHEN MATCHED AND (t.[Label] <> s.[Label] OR t.[SortOrder] <> s.[SortOrder]) THEN
@@ -32,11 +34,13 @@ USING (VALUES
     ('organization', 'View',    1), ('organization', 'Create', 2), ('organization', 'Edit', 3), ('organization', 'Delete', 4),
     ('employees',    'View',    1), ('employees',    'Create', 2), ('employees',    'Edit', 3), ('employees',    'Delete', 4),
     ('employees',    'ViewSensitive', 6), ('employees', 'EditSensitive', 7), ('employees', 'ViewBank', 8), ('employees', 'EditBank', 9),
-    ('attendance',   'View',    1), ('attendance',   'Create', 2), ('attendance',   'Edit', 3), ('attendance',   'Approve', 5),
+    ('attendance',   'View',    1), ('attendance',   'Create', 2), ('attendance',   'Edit', 3), ('attendance',   'Delete', 4), ('attendance', 'Approve', 5),
     ('leave',        'View',    1), ('leave',        'Create', 2), ('leave',        'Edit', 3), ('leave',        'Delete', 4), ('leave', 'Approve', 5),
     ('payroll',      'View',    1), ('payroll',      'Create', 2), ('payroll',      'Edit', 3), ('payroll',      'Approve', 5),
     ('recruitment',  'View',    1), ('recruitment',  'Create', 2), ('recruitment',  'Edit', 3), ('recruitment',  'Delete', 4),
-    ('settings',     'View',    1), ('settings',     'Create', 2), ('settings',     'Edit', 3), ('settings',     'Delete', 4)
+    ('settings',     'View',    1), ('settings',     'Create', 2), ('settings',     'Edit', 3), ('settings',     'Delete', 4),
+    ('activity',     'View',    1),
+    ('excel',        'View',    1), ('excel',        'Import', 10), ('excel',        'Export', 11)
 ) AS s ([ModuleKey], [Action], [SortOrder])
     ON t.[ModuleKey] = s.[ModuleKey] AND t.[Action] = s.[Action]
 WHEN MATCHED AND t.[SortOrder] <> s.[SortOrder] THEN
