@@ -56,7 +56,7 @@ DECLARE @IsInitialRoleSeed bit = CASE WHEN EXISTS (SELECT 1 FROM [sec].[Role]) T
 MERGE [sec].[Role] WITH (HOLDLOCK) AS t
 USING (VALUES
     (N'HR Administrator',   N'Full access to every module, including settings.',               CAST(1 AS bit), 'Active'),
-    (N'HR Officer',         N'Day-to-day HR operations without payroll approval or settings.', CAST(0 AS bit), 'Active'),
+    (N'HR Officer',         N'Day-to-day HR operations and payroll approval, without settings.', CAST(0 AS bit), 'Active'),
     (N'Department Manager', N'Views the team and approves attendance and leave.',             CAST(0 AS bit), 'Active'),
     (N'Payroll Officer',    N'Prepares and approves payroll.',                                 CAST(0 AS bit), 'Active'),
     (N'Recruiter',          N'Manages job openings, candidates and interviews.',               CAST(0 AS bit), 'Active'),
@@ -88,10 +88,13 @@ BEGIN
         (N'HR Officer',         'employees',    'View,Create,Edit'),
         (N'HR Officer',         'attendance',   'View,Create,Edit,Approve'),
         (N'HR Officer',         'leave',        'View,Create,Edit,Approve'),
-        (N'HR Officer',         'payroll',      'View'),
+        -- Approve lets HR Officer see every payslip and salary (the API shows others only their own);
+        -- it also approves runs, never one the same person processed.
+        (N'HR Officer',         'payroll',      'View,Approve'),
         (N'HR Officer',         'recruitment',  'View,Create,Edit'),
-        -- No employees grant until manager scope (own team only) exists in the API.
+        -- The API scopes a manager to their own record and direct reports (hr.Employee.ManagerEmployeeId).
         (N'Department Manager', 'dashboard',    'View'),
+        (N'Department Manager', 'employees',    'View'),
         (N'Department Manager', 'organization', 'View'),
         (N'Department Manager', 'recruitment',  'View'),
         (N'Department Manager', 'attendance',   'View,Approve'),
