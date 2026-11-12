@@ -102,7 +102,9 @@ BEGIN
         (N'Recruiter',          'dashboard',    'View'),
         (N'Recruiter',          'recruitment',  'View,Create,Edit,Delete'),
         (N'Employee',           'dashboard',    'View'),
-        (N'Employee',           'attendance',   'View'),
+        -- Create lets an employee punch and request adjustments or overtime for their own record only
+        -- (the API scopes it); creating shifts and holidays needs attendance:Edit.
+        (N'Employee',           'attendance',   'View,Create'),
         (N'Employee',           'leave',        'View,Create'),
         (N'Auditor',            'dashboard',    'View'),
         (N'Auditor',            'organization', 'View'),
