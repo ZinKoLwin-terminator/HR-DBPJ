@@ -8,6 +8,9 @@ CREATE TABLE [rec].[Application]
     [AppliedOn]        date           NOT NULL,
     [RejectionReason]  nvarchar(200)  NULL,
     [Notes]            nvarchar(300)  NULL,
+    -- Set when an HR Administrator approved the hire despite a do-not-rehire match (both columns or neither).
+    [BlacklistOverrideReason]   nvarchar(300) NULL,
+    [BlacklistOverrideByUserId] int           NULL,
     [CreatedAtUtc]     datetime2(3)   NOT NULL CONSTRAINT [DF_Application_CreatedAtUtc] DEFAULT (SYSUTCDATETIME()),
     [CreatedByUserId]  int            NULL,
     [ModifiedAtUtc]    datetime2(3)   NOT NULL CONSTRAINT [DF_Application_ModifiedAtUtc] DEFAULT (SYSUTCDATETIME()),
@@ -19,6 +22,7 @@ CREATE TABLE [rec].[Application]
     CONSTRAINT [FK_Application_JobOpening] FOREIGN KEY ([JobOpeningId]) REFERENCES [rec].[JobOpening] ([Id]),
     CONSTRAINT [FK_Application_Candidate] FOREIGN KEY ([CandidateId]) REFERENCES [rec].[Candidate] ([Id]),
     CONSTRAINT [CK_Application_Stage] CHECK ([Stage] IN ('Applied', 'Screening', 'Interview', 'Selected', 'Rejected')),
+    CONSTRAINT [CK_Application_BlacklistOverride] CHECK (([BlacklistOverrideReason] IS NULL AND [BlacklistOverrideByUserId] IS NULL) OR ([BlacklistOverrideReason] IS NOT NULL AND [BlacklistOverrideByUserId] IS NOT NULL AND LEN(LTRIM(RTRIM([BlacklistOverrideReason]))) > 0)),
     -- A rejection needs a reason; other stages carry none.
     CONSTRAINT [CK_Application_RejectionReason] CHECK (([Stage] = 'Rejected' AND LEN(LTRIM([RejectionReason])) > 0) OR ([Stage] <> 'Rejected' AND [RejectionReason] IS NULL))
 );

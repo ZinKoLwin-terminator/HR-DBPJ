@@ -34,6 +34,7 @@ USING (VALUES
     ('organization', 'View',    1), ('organization', 'Create', 2), ('organization', 'Edit', 3), ('organization', 'Delete', 4),
     ('employees',    'View',    1), ('employees',    'Create', 2), ('employees',    'Edit', 3), ('employees',    'Delete', 4),
     ('employees',    'ViewSensitive', 6), ('employees', 'EditSensitive', 7), ('employees', 'ViewBank', 8), ('employees', 'EditBank', 9),
+    ('employees',    'ViewBlacklist', 12), ('employees', 'EditBlacklist', 13),
     ('attendance',   'View',    1), ('attendance',   'Create', 2), ('attendance',   'Edit', 3), ('attendance',   'Delete', 4), ('attendance', 'Approve', 5),
     ('leave',        'View',    1), ('leave',        'Create', 2), ('leave',        'Edit', 3), ('leave',        'Delete', 4), ('leave', 'Approve', 5),
     ('payroll',      'View',    1), ('payroll',      'Create', 2), ('payroll',      'Edit', 3), ('payroll',      'Approve', 5),

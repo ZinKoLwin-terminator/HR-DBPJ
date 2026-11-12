@@ -13,6 +13,8 @@ CREATE TABLE [rec].[Candidate]
     -- Demo keeps only the file name; real files belong in file storage.
     [ResumeName]       nvarchar(260)  NULL,
     [Notes]            nvarchar(300)  NULL,
+    -- Optional; used only to match the do-not-rehire list (never returned by the API).
+    [NationalId]       nvarchar(40)   NULL,
     [CreatedAtUtc]     datetime2(3)   NOT NULL CONSTRAINT [DF_Candidate_CreatedAtUtc] DEFAULT (SYSUTCDATETIME()),
     [CreatedByUserId]  int            NULL,
     [ModifiedAtUtc]    datetime2(3)   NOT NULL CONSTRAINT [DF_Candidate_ModifiedAtUtc] DEFAULT (SYSUTCDATETIME()),
